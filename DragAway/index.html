@@ -1,0 +1,111 @@
+<head>
+	<title> DragAway</title>
+	<script src="phaser.js"></script>
+</head>
+<body>
+	<script type="text/javascript">
+		window.onload = function() {			
+			
+			var game = new Phaser.Game(800, 800, Phaser.AUTO, '', { preload: preload, create: create, update: update});
+			
+			var Player;			
+			var EnGroup01;
+			var EnGroup02;
+			var Random;	
+			var menuText;
+			
+			function preload() {
+			    game.load.image('player', 'sprites/player.png');
+			    game.load.image('Enemy01', 'sprites/en1.png');
+			    game.load.image('Enemy02', 'sprites/en2.png');
+			}
+			
+			function create() {
+			    game.physics.startSystem(Phaser.Physics.ARCADE);
+
+				Player = game.add.sprite(400, 400, 'player');
+				Player.anchor.setTo(0.5, 0.5);
+				game.physics.enable(Player, Phaser.Physics.ARCADE);
+				Player.inputEnabled = true;
+				Player.input.enableDrag(true);
+
+				EnGroup01 = game.add.group();
+				EnGroup01.enableBody = true;
+				EnGroup01.physicsBodyType = Phaser.Physics.ARCADE;
+								
+				EnGroup02 = game.add.group();
+				EnGroup02.enableBody = true;
+				EnGroup02.physicsBodyType = Phaser.Physics.ARCADE;			
+				
+				menuText = game.add.text(game.world.centerX,game.world.centerY,' ', { font: '84px Arial', fill: '#fff' });
+				menuText.anchor.setTo(0.5, 0.5);
+				menuText.visible = false;
+				
+				StartEnemies();
+				
+			}		
+			
+		
+			function update() {
+				if(Player.alive){
+					Player.body.velocity.setTo(0,0);
+					game.physics.arcade.overlap(EnGroup01, EnGroup02, collisionHandler, null, this);	
+					game.physics.arcade.overlap(EnGroup01, Player, RedCollisionHandler, null, this);
+					game.physics.arcade.overlap(EnGroup02, Player, BlueCollisionHandler, null, this);
+				}
+			}			
+		
+			function StartEnemies() {
+			
+				for(var i = 0; i<5; i++){					
+					var RedCube = EnGroup01.create(game.rnd.integerInRange(0,300),game.rnd.integerInRange(0,700),'Enemy01');
+					RedCube.anchor.setTo(0.5,0.5);
+					RedCube.body.velocity.setTo(game.rnd.integerInRange(-200,200),game.rnd.integerInRange(-200,200));
+					RedCube.body.collideWorldBounds = true;
+					RedCube.body.bounce.set(1);
+					
+					var BlueCube = EnGroup02.create(game.rnd.integerInRange(400,700),game.rnd.integerInRange(0,700),'Enemy02');
+					BlueCube.anchor.setTo(0.5,0.5);
+					BlueCube.body.velocity.setTo(game.rnd.integerInRange(-200,200),game.rnd.integerInRange(-200,200));
+					BlueCube.body.collideWorldBounds = true;
+					BlueCube.body.bounce.set(1);
+				}
+			}
+			
+			function collisionHandler(RedCube, BlueCube){
+				RedCube.kill();
+				BlueCube.kill();
+				
+				if(EnGroup01.countLiving()==0 || EnGroup02.countLiving()==0){
+					menuText.text = " You Win! \n Click again to restart";
+					menuText.visible = true;
+					game.input.onTap.addOnce(restart,this);
+				}
+			}
+			
+			function RedCollisionHandler(Player,RedCube){
+				Player.kill();
+				menuText.text = " You Lose! \n Click again to restart";
+				menuText.visible = true;
+				game.input.onTap.addOnce(restart,this);
+			}
+			function BlueCollisionHandler(Player,BlueCube){
+				Player.kill();
+				menuText.text = " You Lose! \n Click again to restart";
+				menuText.visible = true;
+				game.input.onTap.addOnce(restart,this);
+			}
+			
+			function restart(){			
+				EnGroup01.removeAll();
+				EnGroup02.removeAll();
+				StartEnemies();
+				Player.revive();
+				Player.x=400;
+				Player.y=400;																
+				menuText.visible = false;
+			}
+		
+		};
+	</script>
+</body>
